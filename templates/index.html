@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Generator</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #fff8f1;
+            --panel: rgba(255,255,255,.86);
+            --text: #2b211c;
+            --muted: #7d6d63;
+            --accent: #e85d32;
+            --accent-dark: #bd4020;
+            --bot: #fff1e8;
+            --user: #2f2925;
+            --border: rgba(68,43,30,.12);
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at 8% 12%, rgba(232,93,50,.16), transparent 27%),
+                radial-gradient(circle at 92% 85%, rgba(247,180,88,.20), transparent 30%),
+                var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+        }
+
+        .app {
+            width: min(1080px, 100%);
+            height: min(760px, 94vh);
+            display: grid;
+            grid-template-columns: 285px 1fr;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            background: var(--panel);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 28px 80px rgba(77,47,30,.18);
+        }
+
+        .sidebar {
+            padding: 28px 22px;
+            border-right: 1px solid var(--border);
+            background: rgba(255,247,239,.72);
+        }
+
+        .chef {
+            width: 58px;
+            height: 58px;
+            display: grid;
+            place-items: center;
+            border-radius: 19px;
+            font-size: 30px;
+            background: linear-gradient(135deg, #ff9a62, #e85d32);
+            box-shadow: 0 14px 30px rgba(232,93,50,.22);
+        }
+
+        .sidebar h1 {
+            margin-top: 18px;
+            font-size: 25px;
+            line-height: 1.08;
+        }
+
+        .sidebar p {
+            margin-top: 10px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .ideas {
+            margin-top: 28px;
+            display: grid;
+            gap: 10px;
+        }
+
+        .idea {
+            padding: 13px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: rgba(255,255,255,.65);
+            font-size: 12px;
+            line-height: 1.45;
+        }
+
+        .chat {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .topbar {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 39px;
+            height: 39px;
+            display: grid;
+            place-items: center;
+            border-radius: 13px;
+            background: var(--bot);
+            font-size: 20px;
+        }
+
+        .topbar strong { font-size: 15px; }
+        .topbar span {
+            display: block;
+            color: var(--muted);
+            font-size: 11px;
+            margin-top: 2px;
+        }
+
+        #messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 13px 16px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            animation: rise .2s ease;
+        }
+
+        .bot {
+            align-self: flex-start;
+            background: var(--bot);
+            border: 1px solid rgba(232,93,50,.12);
+            border-bottom-left-radius: 5px;
+        }
+
+        .user {
+            align-self: flex-end;
+            color: white;
+            background: var(--user);
+            border-bottom-right-radius: 5px;
+        }
+
+        .composer {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        form {
+            display: flex;
+            gap: 10px;
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 21px;
+            background: rgba(255,255,255,.72);
+        }
+
+        textarea {
+            flex: 1;
+            resize: none;
+            min-height: 44px;
+            max-height: 120px;
+            border: 0;
+            outline: 0;
+            padding: 11px 12px;
+            background: transparent;
+            color: var(--text);
+            font: inherit;
+        }
+
+        textarea::placeholder { color: #a59489; }
+
+        button {
+            width: 48px;
+            height: 48px;
+            border: 0;
+            border-radius: 15px;
+            cursor: pointer;
+            color: white;
+            font-size: 19px;
+            background: linear-gradient(135deg, var(--accent), #ff8b59);
+            transition: transform .15s ease;
+        }
+
+        button:hover { transform: translateY(-2px); }
+        button:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+        .typing {
+            color: var(--muted);
+            font-size: 12px;
+            padding: 0 4px 5px;
+        }
+
+        @keyframes rise {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 760px) {
+            body { padding: 0; }
+            .app {
+                height: 100vh;
+                border-radius: 0;
+                grid-template-columns: 1fr;
+            }
+            .sidebar { display: none; }
+            .message { max-width: 89%; }
+        }
+    </style>
+</head>
+<body>
+    <main class="app">
+        <aside class="sidebar">
+            <div class="chef">🍳</div>
+            <h1>Recipe<br>Generator</h1>
+            <p>Your focused AI cooking companion for turning ingredients and ideas into recipes.</p>
+
+            <div class="ideas">
+                <div class="idea">🥘 “Give me an easy paneer recipe.”</div>
+                <div class="idea">🥗 “What can I make with tomato and onion?”</div>
+                <div class="idea">🍝 “Create a quick pasta recipe for 2 people.”</div>
+            </div>
+        </aside>
+
+        <section class="chat">
+            <header class="topbar">
+                <div class="avatar">👨‍🍳</div>
+                <div>
+                    <strong>Recipe Assistant</strong>
+                    <span>Recipes, cooking & meal ideas only</span>
+                </div>
+            </header>
+
+            <div id="messages">
+                <div class="message bot">Hello! 👋 I’m your Recipe Generator. Tell me what ingredients you have, what dish you want, or how many people you’re cooking for.</div>
+            </div>
+
+            <div class="composer">
+                <div id="typing" class="typing"></div>
+                <form id="chatForm">
+                    <textarea id="messageInput" placeholder="Ask for a recipe..." rows="1"></textarea>
+                    <button id="sendButton" type="submit" aria-label="Send">➤</button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const form = document.getElementById("chatForm");
+        const input = document.getElementById("messageInput");
+        const messages = document.getElementById("messages");
+        const typing = document.getElementById("typing");
+        const sendButton = document.getElementById("sendButton");
+
+        function addMessage(text, role) {
+            const el = document.createElement("div");
+            el.className = `message ${role}`;
+            el.textContent = text;
+            messages.appendChild(el);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        input.addEventListener("input", () => {
+            input.style.height = "auto";
+            input.style.height = Math.min(input.scrollHeight, 120) + "px";
+        });
+
+        input.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                form.requestSubmit();
+            }
+        });
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const message = input.value.trim();
+            if (!message) return;
+
+            addMessage(message, "user");
+            input.value = "";
+            input.style.height = "auto";
+            typing.textContent = "Recipe Assistant is thinking...";
+            sendButton.disabled = true;
+
+            try {
+                const response = await fetch("/api/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || "Request failed");
+                }
+
+                addMessage(data.reply, "bot");
+            } catch (error) {
+                addMessage("Sorry, I couldn't process that request right now. Please try again.", "bot");
+            } finally {
+                typing.textContent = "";
+                sendButton.disabled = false;
+                input.focus();
+            }
+        });
+    </script>
+</body>
+</html>
